@@ -15,10 +15,12 @@ import fnmatch
 import subprocess
 import multiprocessing
 
+
 def init_worker():
     """Initialize workers so they can’t get a KeyboardInterrupt
     """
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
 
 def loudgain(args):
     """loudgain args
@@ -28,11 +30,11 @@ def loudgain(args):
     args[n+1:] = filenames
     """
     print("Working on {} ...".format(os.path.abspath(os.path.join(args[0],
-        '*' + args[1]))))
+                                                                  '*' + args[1]))))
     sys.stdout.flush()
     try:
         retcode = subprocess.check_call(['loudgain', '-q'] + args[2:],
-            stdout=open(os.devnull, 'wb'))
+                                        stdout=open(os.devnull, 'wb'))
 
     except subprocess.CalledProcessError as e:
         print("loudgain returned status {}, command was:\n{}".format(
@@ -47,6 +49,7 @@ def loudgain(args):
         retcode = e.errno
 
     return retcode
+
 
 def main():
     """Main program
@@ -79,22 +82,22 @@ def main():
 
     parser = argparse.ArgumentParser(
         description='ReplayGain album folders recursively, using loudgain.\n' +
-            'Files of the same type in the same folder are '
-            'considered an album.\n \n' +
-            textwrap.fill("Supported audio file types: " +
-                ", ".join(sorted(extensions)), 75),
+        'Files of the same type in the same folder are '
+        'considered an album.\n \n' +
+        textwrap.fill("Supported audio file types: " +
+                      ", ".join(sorted(extensions)), 75),
         epilog='Please report any issues to '
-            'https://github.com/Moonbase59/loudgain/issues.',
+        'https://github.com/Moonbase59/loudgain/issues.',
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-v', '--version', action='version',
-        version='%(prog)s ' + __version__)
+                        version='%(prog)s ' + __version__)
     parser.add_argument('-n', '--numproc', type=int, choices=range(1, 33),
-        metavar='1..32', default=multiprocessing.cpu_count(),
-        help='set max. number of parallel processes (default: %(default)d)')
+                        metavar='1..32', default=multiprocessing.cpu_count(),
+                        help='set max. number of parallel processes (default: %(default)d)')
     parser.add_argument('-f', '--follow-links', action='store_true',
-        help='follow links (default: %(default)s); use with care!')
+                        help='follow links (default: %(default)s); use with care!')
     parser.add_argument('folder', nargs='+',
-        help='Path of a folder of audio files.')
+                        help='Path of a folder of audio files.')
     args = parser.parse_args()
 
     # set number of parallel processes to use
@@ -103,7 +106,7 @@ def main():
     # First, check if loudgain exists and show some info
     try:
         output = subprocess.check_output(["loudgain", "--version"],
-            stderr=subprocess.STDOUT)
+                                         stderr=subprocess.STDOUT)
         print("Using loudgain v{}, max. {} parallel processes.".format(
             output.split()[1], numproc))
         sys.stdout.flush()
@@ -111,7 +114,7 @@ def main():
         if e.errno == errno.ENOENT:
             # handle file not found error.
             print("loudgain executable not found; this is required",
-                file=sys.stderr)
+                  file=sys.stderr)
             exit(1)
         else:
             # Something else went wrong while trying to run `loudgain`
@@ -123,7 +126,7 @@ def main():
     stat_excluded_folders = 0
     for folder in args.folder:
         for root, dirs, files in os.walk(os.path.abspath(os.path.join(
-            os.getcwd(), folder)), followlinks=args.follow_links, topdown=True):
+                os.getcwd(), folder)), followlinks=args.follow_links, topdown=True):
             # remove excluded dirs "in-place", only if topdown=True (default)
             for exclude in excludes:
                 for dir in dirs:
@@ -137,13 +140,14 @@ def main():
                 fileName, fileExt = os.path.splitext(file)
                 if fileExt.lower() in extensions:
                     cluster.setdefault(root, {}).setdefault(fileExt.lower(),
-                        []).append(file)
+                                                            []).append(file)
 
     # statitics
     stat_folders = len(cluster)
-    stat_extensions = { ext for folder in cluster for ext in cluster[folder] }
+    stat_extensions = {ext for folder in cluster for ext in cluster[folder]}
     stat_files = 0
-    stat_files = sum(1 for folder in cluster for ext in cluster[folder] for f in cluster[folder][ext])
+    stat_files = sum(
+        1 for folder in cluster for ext in cluster[folder] for f in cluster[folder][ext])
 
     # set up the tasks for multiprocesssing
     # a task is one loudgain invocation (one folder, same file type)
@@ -159,7 +163,7 @@ def main():
 
     print("Excluded {} folders.".format(stat_excluded_folders))
     print("Working on {} folders containing {} files, requiring {} tasks."
-        .format(stat_folders, stat_files, stat_tasks))
+          .format(stat_folders, stat_files, stat_tasks))
     print("Found files of type: {}".format(", ".join(sorted(stat_extensions))))
     print("=== START ===")
     sys.stdout.flush()
@@ -186,7 +190,7 @@ def main():
     print("=== END ===")
     print("Excluded {} folders.".format(stat_excluded_folders))
     print("Worked on {} folders containing {} files, requiring {} tasks."
-        .format(stat_folders, stat_files, stat_tasks))
+          .format(stat_folders, stat_files, stat_tasks))
     print("Found files of type: {}".format(", ".join(sorted(stat_extensions))))
 
     if any(ret != 0 for ret in results.get()):
