@@ -5,15 +5,15 @@
 
 from __future__ import print_function
 
-import os
-import errno
-import sys
-import signal
 import argparse
-import textwrap
+import errno
 import fnmatch
-import subprocess
 import multiprocessing
+import os
+import signal
+import subprocess
+import sys
+import textwrap
 
 
 def init_worker():
