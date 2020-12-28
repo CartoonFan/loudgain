@@ -119,7 +119,7 @@ def main():
 
     # Traverse folders, set up list of files.
     # dict: {folder: {filetype: [files]}}
-    cluster = dict()
+    cluster = {}
     stat_excluded_folders = 0
     for folder in args.folder:
         for root, dirs, files in os.walk(os.path.abspath(os.path.join(
@@ -189,7 +189,7 @@ def main():
         .format(stat_folders, stat_files, stat_tasks))
     print("Found files of type: {}".format(", ".join(sorted(stat_extensions))))
 
-    if not all(ret == 0 for ret in results.get()):
+    if any(ret != 0 for ret in results.get()):
         print("Errors occurred!", file=sys.stderr)
     sys.stdout.flush()
 
